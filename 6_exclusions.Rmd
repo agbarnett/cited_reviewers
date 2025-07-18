@@ -1,0 +1,63 @@
+---
+title: "Exclusions"
+author: "Adrian Barnett"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, error=FALSE, comment='', dpi=400)
+
+library(flextable)
+library(stringr)
+library(dplyr)
+library(janitor) # for tabyl, adorn
+
+## get the data
+# from 4_reviewers_papers_openalex.R
+load('data/4_reviewers_papers.RData')
+reviewers_excluded = excluded
+# from 2_get_xml_details_and_combine.R (in this order because of `excluded`)
+load('data/2_xml_data.RData')
+remove(ref_meta_data, reviewers_names, papers_reviewers_cited,
+     reference_dois) # not needed
+
+```
+
+## Exclusion reasons at XML stage
+
+```{r}
+tab = tabyl(excluded, reason) %>%
+  mutate(percent = round(percent*100)) %>%
+  arrange(desc(n))
+ftab = flextable(tab) %>%
+  theme_box() %>%
+  autofit() 
+ftab
+```
+
+The table shows the papers that were excluded on the first examination of the XML data for each paper. 
+
+## Exclusion reasons at OpenAlex stage
+
+```{r}
+tab = tabyl(reviewers_excluded, reason) %>%
+  mutate(percent = round(percent*100)) %>%
+  arrange(desc(n))
+ftab = flextable(tab) %>%
+  theme_box() %>%
+  autofit() 
+ftab
+```
+
+The table shows the reviewers that were excluded at the stage of querying OpenAlex for their record.
+
+## Flow chart
+
+```{r}
+source('6_flow_chart_exclusions.R')
+par(mai=c(0,0.04,0.04,0.04))
+plotmat(M, pos = pos, name = labels, lwd = 1, shadow.size=0, curve=0, arr.pos = 0.25,
+        box.lwd = 2, cex.txt = 1, box.size = frame$box.size, box.col=frame$box.col,
+        box.type = frame$box.type, box.prop = frame$box.prop, txt.col = tcol)
+```

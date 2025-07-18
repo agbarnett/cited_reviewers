@@ -1,0 +1,237 @@
+---
+title: "Random checks of XML data extraction"
+author: "Adrian Barnett"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, error=FALSE, comment='', dpi=400)
+library(dplyr)
+library(flextable)
+library(targets)
+
+# get the data
+load('data/2_xml_data.RData')
+
+# randomly select DOIs
+TeachingDemos::char2seed('kingslynn')
+n_select = 10 # number to randomly select
+selected = sample(unique(reviewers_names$doi), size = n_select, replace = FALSE)
+
+# function to get individual studies
+select_one = function(this_doi){
+  reviewers = filter(reviewers_names, doi == this_doi) %>%
+    mutate(name = paste(first_name, surname)) %>% 
+    select(-doi, -first_name, -surname, -n_papers_cited_doi_pmid) # to reduce room
+  refs = filter(reference_dois, doi == this_doi) %>%
+    select(-doi) # to reduce room
+  to_return = list()
+  to_return$reviewers = reviewers
+  to_return$refs = refs
+  return(to_return)
+}
+```
+
+### Reviewers for DOI `r selected[1]`
+
+```{r}
+this = select_one(selected[1])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[1]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+
+### Reviewers for DOI `r selected[2]`
+
+```{r}
+this = select_one(selected[2])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[2]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+### Reviewers for DOI `r selected[3]`
+
+```{r}
+this = select_one(selected[3])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[3]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+### Reviewers for DOI `r selected[4]`
+
+```{r}
+this = select_one(selected[4])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[4]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+### Reviewers for DOI `r selected[5]`
+
+```{r}
+this = select_one(selected[5])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[5]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+### Reviewers for DOI `r selected[6]`
+
+```{r}
+this = select_one(selected[6])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[6]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+### Reviewers for DOI `r selected[7]`
+
+```{r}
+this = select_one(selected[7])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[7]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+### Reviewers for DOI `r selected[8]`
+
+```{r}
+this = select_one(selected[8])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[8]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+### Reviewers for DOI `r selected[9]`
+
+```{r}
+this = select_one(selected[9])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[9]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+### Reviewers for DOI `r selected[10]`
+
+```{r}
+this = select_one(selected[10])
+ftab = flextable(this$reviewers) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### First references for DOI `r selected[10]`
+
+```{r}
+ftab = head(this$refs) %>%
+  flextable() %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+

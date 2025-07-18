@@ -1,0 +1,208 @@
+---
+title: "Plots"
+author: "Adrian Barnett"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, error=FALSE, comment='', dpi=400)
+library(dplyr)
+library(janitor) # for tabyl
+library(ggplot2)
+g.theme = theme_bw() + theme(panel.grid.minor = element_blank())
+
+# data from 5_match_papers_reviewers
+load('data/5_analysis_data.RData')
+# 
+matched = mutate(matched,
+                 recommendation_n = case_when( # for nicer labels
+                   recommendation == 'approve' ~ 1, #
+                   recommendation == 'approve-with-reservations' ~ 2,
+                   recommendation == 'reject' ~ 3,
+                 ),
+                 version3 = ifelse(version>=3, 3, version)) %>% # capped version
+  filter(!is.na(matches)) # can't use if assessment of matching could not be made ===  DO WE NEED THIS FOR SUMMARIES?
+rlabels = c('Approve','Approve with\nreservations','Reject')
+colours = c("darkseagreen3", "darkorange", "brown2")
+```
+
+## Reviewers' recommendations
+
+#### For all versions combined
+
+```{r, fig.height=4}
+# make percentages
+tab = tabyl(matched, recommendation_n) %>%
+  mutate(percent = paste(round(percent*100),'%',sep=''))
+#
+bplot = ggplot(data = matched, aes(x=recommendation_n))+
+  geom_bar(fill = colours, width=0.99)+
+  geom_text(data =  tab, aes(x=recommendation_n, y=n, label = percent), adj=0)+
+  scale_x_continuous(breaks = 1:3, labels = rlabels, expand=c(0,0))+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1)))+
+  g.theme+
+  xlab(NULL)+
+  ylab('Count')+
+  coord_flip()
+bplot
+```
+
+#### By version
+
+```{r, fig.height=4}
+# make percentages
+tab = group_by(matched, recommendation_n, version3) %>%
+  tally() %>%
+  group_by(version3) %>%
+  mutate(N = sum(n)) %>%
+  mutate(percent = n/N) %>%
+  filter(percent > 0.02) %>% # remove small percents
+  mutate(percent = paste(round(percent*100),'%',sep='')) %>%
+  ungroup() 
+#
+bplot = ggplot(data = tab, aes(x = version3, y = n, fill=factor(recommendation_n)))+
+  geom_bar(position = 'stack', stat='identity', width=0.99)+
+  scale_fill_manual(NULL, values = colours, labels=rlabels)+
+#  geom_text(data =  tab, aes(x=recommendation, y=n, label = percent))+
+  g.theme+
+  theme(legend.position = "inside", 
+        legend.position.inside =  c(0.85, 0.15))+
+  scale_x_reverse(breaks=1:3, labels=c('1','2','3+'), expand=c(0,0))+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)))+
+  xlab('Version')+
+  ylab('Count')+
+  coord_flip()
+bplot
+```
+
+## Number of papers the reviewer cited
+
+```{r}
+# combine high numbers
+for_plot = mutate(matched,
+                  n_reviewer_cited = ifelse(n_reviewer_cited>5, 5, n_reviewer_cited))
+#
+labels = as.character(0:5); labels[6] = '5+'
+bplot = ggplot(data = for_plot, aes(x = n_reviewer_cited))+
+  geom_bar(fill = 'palegreen1', col='grey44')+
+  scale_x_continuous(breaks=0:5, labels=labels, expand=c(0,0))+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)))+
+  g.theme+
+  xlab("Number of papers the reviewer cited")+
+  ylab('Frequency')
+bplot
+```
+
+## Number of self-citations
+
+```{r}
+# combine high numbers
+for_plot = mutate(matched,
+                  self_cited_count = ifelse(self_cited_count>5, 5, self_cited_count))
+#
+labels = as.character(0:5); labels[6] = '5+'
+bplot = ggplot(data = for_plot, aes(x = self_cited_count))+
+  geom_bar(fill = 'palegreen2', col='grey44')+
+  scale_x_continuous(breaks=0:5, labels=labels, expand=c(0,0))+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)))+
+  g.theme+
+  xlab("Number of self-citations by the reviewer")+
+  ylab('Frequency')
+bplot
+```
+
+## Reviewers' publication counts
+
+```{r}
+hplot = ggplot(data = matched, aes(x=works_count+1))+
+  geom_histogram(fill = 'lightblue2', col='grey44')+
+  scale_x_log10(breaks=c(1,11,101,1001),
+                labels=c(0,10,100,1000), 
+                expand = expansion(mult = c(0, 0.05)))+
+  g.theme+
+  xlab("Reviewers' publication count")+
+  ylab('Frequency')
+hplot
+```
+
+The x-axis is log-transformed (base 10). The number of papers is an indicator of the reviewer's experience.
+
+## Self-citations by version 
+
+```{r fig.width=5, fig.height=3}
+stats = group_by(matched, version3) %>%
+  summarise(n = n(),
+            sd = sd(self_cited_count),
+            mean = mean(self_cited_count),
+            sem = sd / sqrt(n),
+            lower = mean - sem,
+            upper = mean + sem) %>%
+  ungroup() 
+#
+colour = 'navy'
+plot = ggplot(data = stats, aes(x=version3, y=mean, ymin=lower, ymax=upper)) +
+  geom_point(size=4, color=colour)+
+  geom_errorbar(width=0, linewidth=1.05, color=colour)+
+  g.theme +
+  xlab('Version')+
+  ylab('Mean self-citation')+
+  scale_x_reverse(breaks = 1:3, labels = c('1','2','3+'))+
+  scale_y_continuous(limits=c(0,NA), expand=c(0,0))+ # start at zero
+  coord_flip()
+plot
+ggsave(filename = 'figures/6_self_cite_version.jpg', plot, width = 4.5, height = 3,
+       units = 'in', dpi = 500)
+```
+
+## Self-citations by country 
+
+```{r, fig.height=7}
+stats = group_by(matched, country) %>%
+  summarise(n = n(),
+            sd = sd(self_cited_count),
+            mean = mean(self_cited_count),
+            sem = sd / sqrt(n),
+            lower = mean - sem,
+            upper = mean + sem) %>%
+  ungroup() %>%
+  filter(n>100) %>%
+  arrange(mean) %>%
+  mutate(x = 1:n())
+#
+colour = 'darkorange3'
+cplot = ggplot(data = stats, aes(x=x, y=mean,ymin=lower, ymax=upper)) +
+  geom_point(size=2, color=colour)+
+  geom_errorbar(width=0, linewidth=1.05, color=colour)+
+  g.theme+
+  xlab('')+
+  ylab('Mean self-citation')+
+  scale_x_continuous(breaks = 1:nrow(stats), labels = stats$country, expand=c(0.01,0.01))+
+  scale_y_continuous(limits=c(0,NA), expand=c(0,0))+ # start at zero
+  coord_flip()
+cplot
+ggsave(filename = 'figures/6_self_cite_country.jpg', cplot, width = 5.2, height = 4.7,
+       units = 'in', dpi = 500)
+```
+
+Limited to countries with at least 100 reviews.
+
+
+```{r include = FALSE}
+## Odd results
+filter(stats, mean > 5)
+filter(stats, n>14)
+```
+
+## Model of self citation counts
+
+```{r, figure.height = 7}
+source('6_model_self_by_country.R')
+cplot
+# export
+ggsave('figures/6_country_model.jpg', cplot, width = 5, height = 6, units = 'in', dpi = 500)
+```
+
+We used a Poisson model with a dependent variable of the number of self-citations and independent variable of country, which was fitted as a random effect.
+The plot shows those estimates where the posterior probability is less than 0.01 and there are more than 100 reviews. 
+The country labels include the number of reviews, which is small for some countries. 

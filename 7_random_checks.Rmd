@@ -1,0 +1,196 @@
+---
+title: "Random manual checks of the analysis data"
+author: "Adrian Barnett"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, error=FALSE, comment='', dpi=400)
+library(janitor)
+library(flextable)
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(ggrepel)
+
+## read in the Excel data
+not_cited = read_excel('checks/6_random_checks_complete.xlsx', sheet = 1, col_names =TRUE) %>%
+  unique() # safety net for duplicates
+cited = read_excel('checks/6_random_checks_complete.xlsx', sheet = 2, col_names =TRUE) %>%
+  unique() # safety net for duplicates
+self_cited = read_excel('checks/6_random_checks_complete.xlsx', sheet = 3, col_names =TRUE) %>%
+  unique() # safety net for duplicates
+```
+
+The results below are manual checks for randomly selected articles and reviewers. The aim is to manually verify the accuracy of the automated data collection. We use a Bayesian approach to give an upper limit on the error rates.
+
+The first results show the frequency table of errors.
+
+## Articles where reviewer is not cited in the paper's references
+
+```{r}
+tab1 = tabyl(not_cited, checked) %>%
+  mutate(percent = round(percent*100)) 
+ftab = flextable(tab1) %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+This check examined reviewers where our data algorithm said there was no citation to the reviewer, which we then verified by searching the article's reference list. The errors were for references to a book and a conference paper that did not have a DOI.
+
+## Where reviewer is cited in the articles's references
+
+```{r}
+tab2 = tabyl(cited, checked) %>%
+  mutate(percent = round(percent*100))
+ftab = flextable(tab2) %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+This check examined reviewers where our data algorithm said there was one or more citations to the reviewer, which we then verified by searching the article's reference list. The error was where our data algorithm only captured one citation, but there should have been two.
+
+## Reviewers who used self-citations
+
+```{r}
+tab3 = tabyl(self_cited, checked) %>%
+  mutate(percent = round(percent*100))
+ftab = flextable(tab3) %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+This check examined reviewers where our data algorithm said there were one or more self-citations, which we then verified by searching the review text. 
+For all four failures of our algorithm, we did capture a self-citation, but the number captured was one fewer than the true number.
+
+```{r, include=FALSE}
+## Bayesian calculations
+# prior is beta(1,22), Pr(error rate <= 0.5) = 0.9
+x = seq(0,0.5,0.001) # range of errors to examine in plot
+p_limit = 0.9 # probability limit
+
+# prior
+prior_a = 1
+prior_b = 3.32 # by trial and error
+#qbeta(p_limit, shape1 = prior_a, shape2 = prior_b) # for trial and error
+prior_frame = data.frame(x=x, d=dbeta(x, shape1 = prior_a, shape2=prior_b))
+
+# not cited
+not_cited_a = filter(not_cited, checked=='fail') %>% nrow()
+not_cited_b = filter(not_cited, checked=='pass') %>% nrow()
+posterior_not_cited_a = prior_a + not_cited_a
+posterior_not_cited_b = prior_b + not_cited_b
+not_cited_frame = data.frame(x=x, d=dbeta(x, shape1 = posterior_not_cited_a, shape2 = posterior_not_cited_b))
+
+# cited
+cited_a = filter(cited, checked=='fail') %>% nrow()
+cited_b = filter(cited, checked=='pass') %>% nrow()
+posterior_cited_a = prior_a + cited_a
+posterior_cited_b = prior_b + cited_b
+cited_frame = data.frame(x=x, d=dbeta(x, shape1 = posterior_cited_a, shape2 = posterior_cited_b))
+
+# self-cited
+self_cited_a = filter(self_cited, checked=='fail') %>% nrow()
+self_cited_b = filter(self_cited, checked=='pass') %>% nrow()
+posterior_self_cited_a = prior_a + self_cited_a
+posterior_self_cited_b = prior_b + self_cited_b
+self_cited_frame = data.frame(x=x, d=dbeta(x, shape1 = posterior_self_cited_a, shape2 = posterior_self_cited_b))
+
+## for text
+# prior
+upper_error_prior = qbeta(p_limit, shape1 = prior_a, shape2 = prior_b)
+upper_error_prior = round(upper_error_prior*1000)/1000
+# not cited
+upper_error_not_cited = qbeta(p_limit, shape1 = posterior_not_cited_a, shape2 = posterior_not_cited_b)
+upper_error_not_cited = round(upper_error_not_cited*1000)/1000
+posterior_mode_not_cited = (posterior_not_cited_a - 1 )/ (posterior_not_cited_a+posterior_not_cited_b-2)
+posterior_mode_not_cited = round(posterior_mode_not_cited*1000)/1000
+# cited
+upper_error_cited = qbeta(p_limit, shape1 = posterior_cited_a, shape2 = posterior_cited_b)
+upper_error_cited = round(upper_error_cited*1000)/1000
+posterior_mode_cited = (posterior_cited_a - 1 )/ (posterior_cited_a+posterior_cited_b-2)
+posterior_mode_cited = round(posterior_mode_cited*1000)/1000
+# cited
+upper_error_self_cited = qbeta(p_limit, shape1 = posterior_self_cited_a, shape2 = posterior_self_cited_b)
+upper_error_self_cited = round(upper_error_self_cited*1000)/1000
+posterior_mode_self_cited = (posterior_self_cited_a - 1 )/ (posterior_self_cited_a+posterior_self_cited_b-2)
+posterior_mode_self_cited = round(posterior_mode_self_cited*1000)/1000
+```
+
+### Plot of the prior and posterior probabilities
+
+```{r plot, fig.width=7}
+# plot
+to_plot = bind_rows(prior_frame, not_cited_frame, cited_frame, self_cited_frame, .id='group')
+colours = c('darkseagreen3', "khaki3", "mediumorchid3", "darkorange3")
+labels = c('Prior for error rates',
+           'Posterior for not cited error',
+           'Posterior for cited error',
+           'Posterior for self-cited error')
+
+## dotted lines for 90%
+# 
+y = dbeta(x=upper_error_prior, shape1 = prior_a, shape2 = prior_b)
+line1 = data.frame(x = upper_error_prior,
+           y = c(0,y)) 
+# 
+y = dbeta(x=upper_error_not_cited, shape1 = posterior_not_cited_a, shape2 = posterior_not_cited_b)
+line2 = data.frame(x = upper_error_not_cited,
+           y = c(0,y)) 
+# 
+y = dbeta(x=upper_error_cited, shape1 = posterior_cited_a, shape2 = posterior_cited_b)
+line3 = data.frame(x = upper_error_cited,
+           y = c(0,y))
+
+# 
+y = dbeta(x=upper_error_self_cited, shape1 = posterior_self_cited_a, shape2 = posterior_self_cited_b)
+line4 = data.frame(x = upper_error_self_cited,
+           y = c(0,y))
+
+
+lines = bind_rows(line1, line2, line3, line4, .id = 'group')
+# text for posterior
+text2 = filter(lines, y > 0) 
+
+#
+bplot = ggplot(data=to_plot, aes(x=x, y=d, col=factor(group)))+
+  geom_line(linewidth=1.05)+
+  geom_line(data = lines, aes(x=x, y=y, col = factor(group)), linewidth=1.05, lty=5)+
+  geom_label_repel(data = text2, aes(x=x, y=y, label=x), nudge_y=2, show.legend = FALSE)+
+  xlab('Error rate (x)')+
+  ylab('Probability density function')+
+  scale_color_manual(NULL, values= colours, labels=labels)+
+  scale_y_continuous(expand=c(0,1))+ # reduce gap to x-axis
+  scale_x_continuous(expand=c(0.005,0.005))+ # reduce gap to y-axis
+  theme_bw()+
+  theme(legend.position = "inside", 
+        legend.position.inside =  c(0.75, 0.75),
+        panel.grid.minor = element_blank())
+bplot
+
+# export
+ggsave('figures/7_error_rates_bayes.jpg', plot = bplot, width = 5.2, height = 3.9, units='in', dpi = 500)
+```
+
+The plot shows the beta distributions for the prior and the posteriors. The highlighted rates are the error rates at the 90% limit. So there is a 90% probability that the error rate is less than the highlighted rate.
+
+
+```{r error_table}
+# make table from above data
+to_table = data.frame(labels,
+                      fails = c(NA,
+                                filter(tab1, checked == 'fail') %>% pull(n),
+                                filter(tab2, checked == 'fail') %>% pull(n),
+                                filter(tab3, checked == 'fail') %>% pull(n)),
+                      error = c(upper_error_prior, upper_error_not_cited, upper_error_cited, upper_error_self_cited))
+ftab = flextable(to_table) %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+The table shows the error rates. The vaguely informative prior had a 90% probability that the error rate was under 0.5.

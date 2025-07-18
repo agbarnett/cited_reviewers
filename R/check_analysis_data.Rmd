@@ -1,0 +1,84 @@
+---
+title: "Random checks of the analysis data"
+author: "Adrian Barnett"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, error=FALSE, comment='', dpi=400)
+
+library(dplyr)
+library(flextable)
+
+## get the data
+for_analysis = targets::tar_read(name = for_analysis)
+
+# randomly select DOIs
+# separate for a) no matches, b) matches, and c) self-citations
+TeachingDemos::char2seed('bristolrovers')
+n_select = 5 # number to randomly select
+#
+selected1 = filter(for_analysis, matches == 0) %>%
+  sample_n(size = n_select, replace = FALSE) %>%
+  pull(doi)
+#
+selected2 = filter(for_analysis, matches > 0) %>%
+  sample_n(size = n_select, replace = FALSE) %>%
+  pull(doi)
+#
+selected3 = filter(for_analysis, self_cited_count > 0) %>%
+  sample_n(size = n_select, replace = FALSE) %>%
+  pull(doi)
+
+# function to get individual studies
+select_one = function(this_doi){
+  reviewer = filter(for_analysis, doi == this_doi) %>%
+    select(doi, name, matches, n_papers_cited, works_count, n_reviewer_cited, self_cited_count) # to reduce room
+  return(reviewer)
+}
+```
+
+# Results with no matches
+
+### Reviewers for DOI `r selected1[1]`
+
+```{r}
+this = select_one(selected1[1])
+ftab = flextable(this) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### Reviewers for DOI `r selected1[2]`
+
+```{r}
+this = select_one(selected1[2])
+ftab = flextable(this) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+# Results with matches
+
+### Reviewers for DOI `r selected2[1]`
+
+```{r}
+this = select_one(selected2[1])
+ftab = flextable(this) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```
+
+### Reviewers for DOI `r selected2[2]`
+
+```{r}
+this = select_one(selected2[2])
+ftab = flextable(this) %>%
+  theme_box() %>%
+  fontsize(part='all', size=7) 
+ftab
+```

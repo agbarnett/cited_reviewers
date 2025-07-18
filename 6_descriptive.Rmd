@@ -1,0 +1,254 @@
+---
+title: "Descriptive statistics"
+author: "Adrian Barnett"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, error=FALSE, comment='', dpi=400)
+options(width=1000, scipen = 999) # Wide pages and no scientific numbers
+library(dplyr)
+library(tableone) # for giant baseline table
+library(janitor) # for tabyl
+library(flextable)
+library(xtable) # for latex
+library(broom)
+library(stringr)
+library(ggplot2)
+
+# data from 5_match_papers_reviewers.R
+load('data/5_analysis_data.RData')
+rlabels = c('Approve','Approve with reservations','Reject')
+rlabels = c('Approve','Reservations','Reject') # shorter version
+# prepare data for table
+matched = mutate(matched,
+                 n_words = str_count(rtext, '\\w+'), # word count of review
+                 journal = case_when(
+                   str_detect(doi, pattern='f1000') ~ 'F1000Research',
+                   str_detect(doi, pattern='wellcome') ~ 'Wellcome Open Research',
+                   str_detect(doi, pattern='gatesopen') ~ 'Gates Open Research',
+                   str_detect(doi, pattern='openreseurope') ~ 'Open Research Europe'),
+                 year = as.numeric(format(date, '%Y')),
+                 any_matches = as.numeric(matches>0), # make binary variables for key continuous variables
+                 any_matches = factor(any_matches, levels=0:1, labels=c('No','Yes')),
+                 any_cited = as.numeric(n_reviewer_cited>0),
+                 any_cited = factor(any_cited, levels=0:1, labels=c('No','Yes')),
+                 any_self = as.numeric(self_cited_count>0),
+                 any_self = factor(any_self, levels=0:1, labels=c('No','Yes')),
+                 recommendation = case_when( # for nicer labels
+                   recommendation == 'approve' ~ 1, #
+                   recommendation == 'approve-with-reservations' ~ 2,
+                   recommendation == 'reject' ~ 3,
+                 ),
+                 recommendation = factor(recommendation, levels=1:3, labels = rlabels),
+                 version3 = ifelse(version>=3, 3, version),
+                 version3 = factor(version3, levels=1:3, labels=c('1','2','3+'))) %>% # capped version
+  filter(!is.na(matches)) # can't use if assessment of matching could not be made; this is the analysis data set
+```
+
+These results are for the analysis data set where the reviewer could be matched.
+
+
+## Summary table
+
+```{r}
+# Create a TableOne object
+vars = c('year','journal','role','recommendation','version3','n_papers_cited','matches','any_matches','n_reviewer_cited','any_cited','self_cited_count','any_self','works_count','n_words')
+n_vars = c('year','n_papers_cited','works_count','n_words')
+tab2 <- CreateTableOne(vars = vars, 
+                       data = matched, 
+                       factorVars = NULL, 
+                       test = FALSE, 
+                       includeNA = TRUE,
+                       addOverall = FALSE) # no total column
+print(tab2, # print version for Word document
+      nonnormal = n_vars, # use median instead of mean
+      catDigits = 1, # no longer allows 0 
+      contDigits = 1, 
+      explain = TRUE, 
+      showAllLevels = TRUE,
+      formatOptions = list(big.mark = ""))
+# export to latex
+m2 = data.frame(print(tab2, 
+                      printToggle = FALSE,
+                nonnormal = n_vars, # use median instead of mean
+      catDigits = 1, # no longer allows 0 
+      contDigits = 1, 
+      explain = TRUE, 
+      showAllLevels = TRUE,
+      formatOptions = list(big.mark = ""))) %>%
+  tibble::rownames_to_column(var = "var")
+print(xtable(m2), include.rownames=FALSE, hline.after=FALSE, file = "results/6_big_table.tex")
+```
+
+
+## Top ten reviewers' countries
+
+```{r}
+tab = tabyl(matched, country) %>%
+  arrange(-n) %>%
+  mutate(percent = round(percent*100),
+         cell = paste(n, ' (', percent, '%)', sep='')) %>%
+  select(country, cell) %>%
+  slice(1:10) %>%
+  rename('n (%)' = 'cell')
+country_tab = flextable(tab) %>%
+  theme_box() %>%
+  autofit()
+country_tab
+
+# for text
+miss_country = filter(matched, is.na(country)) %>% nrow()
+
+# export top 10 to latex
+print(xtable(tab, digits=0), include.rownames=FALSE, hline.after=FALSE, file = "results/6_top_ten_countries.tex")
+```
+
+There were `r miss_country` reviews where the country was missing.
+
+## Number of reviewers per article
+
+```{r}
+# get the number of reviewers per paper
+rev_nums = group_by(matched, doi) %>% summarise(n_reviewers = max(review_number)) %>% ungroup()
+tab = summarise(rev_nums,
+                n = n(),
+                Q1 = quantile(n_reviewers, 0.25),
+                median = quantile(n_reviewers, 0.5),
+                Q3 = quantile(n_reviewers, 0.75))
+ftab = flextable(tab) %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+The summary statistics are for the number of reviewers per article and version.
+
+## Citation numbers by reviewers' experience
+
+This is an internal validation check of the data by examining if the number of times a reviewer is cited in the article increases with their experience as measured by their count of published papers. We used a Poisson regression model with a dependent variable of the count of article citations and independent variable of the reviewers' publication counts.
+
+```{r}
+m = glm(matches ~ log2(works_count+1), family=poisson(), data = matched)
+ests = tidy(m, conf.int = TRUE) %>%
+  filter(str_detect(term, pattern='works')) %>% # 
+  mutate(term = 'log(reviewer`s publication count)',
+         estimate = exp(estimate), # turn to RR
+         conf.low = exp(conf.low), # 
+         conf.high = exp(conf.high),
+         estimate = 100*(estimate-1), # % change
+         conf.low = 100*(conf.low-1), # 
+         conf.high = 100*(conf.high-1), # 
+         p.value = format.pval(p.value, eps = 0.001)) %>%
+  select(term, estimate, conf.low, conf.high, p.value)
+flextable(ests) %>%
+  theme_box() %>%
+  colformat_double(j=2:4, digits=1) %>%
+  autofit()
+```
+
+We used the log base 2 transform of the reviewer's publication counts, so the estimates show the percentage change in the number of citations per doubling of the reviewer's publication counts. As expected, there's a strong increase in the number of citations for more experienced reviewers.
+
+## Citation probability by reference list size
+
+This is an internal validation check of the data by examining if the number of citations to the reviewer increases with the total number of papers cited in the article. We used a Poisson regression model with a dependent variable of the count of article citations and independent variable of the total number of citations in the article.
+
+```{r}
+m = glm(matches ~ log2(n_papers_cited+1), family=poisson(), data = matched)
+ests = tidy(m, conf.int = TRUE) %>%
+  filter(str_detect(term, pattern='papers')) %>% # 
+  mutate(term = 'log(reference list size)',
+         estimate = exp(estimate), # turn to RR
+         conf.low = exp(conf.low), # 
+         conf.high = exp(conf.high),
+         estimate = 100*(estimate-1), # % change
+         conf.low = 100*(conf.low-1), # 
+         conf.high = 100*(conf.high-1), # 
+         p.value = format.pval(p.value, eps = 0.001)) %>%
+  select(term, estimate, conf.low, conf.high, p.value)
+flextable(ests) %>%
+  theme_box() %>%
+  colformat_double(j=2:4, digits=1) %>%
+  autofit()
+```
+
+We used the log base 2 transform of the reference list, so the estimates show the percentage change in the number of citations per doubling of the number of papers in the article's reference list. As expected, there's a strong increase in the number of citations to the reviewer when the article has cited more papers.
+
+## Review length
+
+Here we plot the length of the review by version and recommendation.
+
+```{r}
+to_plot = filter(matched, role =='Referee') %>% # only for referee 
+  group_by(version3, recommendation) %>%
+  summarise(n = n(),
+            median = median(n_words),
+            lower = quantile(n_words, 0.25),
+            upper = quantile(n_words, 0.75))
+plot = ggplot(data = to_plot, aes(x=recommendation, y=median, ymin=lower, ymax=upper))+
+  geom_point()+
+  geom_errorbar(width=0)+
+  ylab('Word count')+
+  xlab(NULL)+
+  theme_bw()+
+  facet_wrap(~version3)+
+  coord_flip()
+plot
+```
+
+### Review length by self-citations
+
+```{r}
+for_model = filter(matched, role =='Referee')
+model = glm(n_words ~ I(version>1) + recommendation + I(self_cited_count>0) +
+              recommendation:I(self_cited_count>0), family = quasipoisson(), data = for_model)
+s = summary(model)
+# get model predictions
+to_pred = expand.grid(recommendation = c('Approve','Reservations','Reject'),
+                      self_cited_count = c(0,1)) %>%
+  mutate(version = 1)
+f = predict.glm(model, to_pred, se.fit = TRUE)
+to_pred = mutate(to_pred, 
+                 mean = f$fit, 
+                 se = f$se.fit,
+                 z = qnorm(0.975),
+                 lower = mean - (z*se),
+                 upper = mean + (z*se),
+                 mean = exp(mean),
+                 lower = exp(lower),
+                 upper = exp(upper))
+plot = ggplot(data = to_pred, aes(x=recommendation, y=mean, ymin = lower, ymax = upper, col=factor(self_cited_count)))+
+  geom_point()+
+  geom_errorbar(width=0)+
+  scale_color_manual('Self-cited', labels=c('No','Yes'), values=c('green2','darkorchid2'))+
+  xlab(NULL)+
+  ylab('Word count')+
+  theme_bw()+
+  theme(panel.grid.minor = element_blank())+
+  coord_flip()
+plot
+```
+
+#### Table of estimates
+
+```{r}
+tab = tidy(model, conf.int = TRUE, exponentiate = TRUE) %>%
+  filter(!str_detect(term,'Intercept')) %>%
+  select(term, estimate, conf.low, conf.high) %>%
+  mutate(term = case_when(str_detect(term, 'version') ~ 'Version > 1',
+                          str_detect(term, 'recommendationReservations$') ~ 'Reservations',
+                          str_detect(term, 'recommendationReject$') ~ 'Reject',
+                          str_detect(term, '^recommendationReservations') ~ 'Reservations x self-cited',
+                          str_detect(term, '^recommendationReject') ~ 'Reject x self-cited',
+                          str_detect(term, 'self_cited') ~ 'Self-cited',
+                          TRUE ~ as.character(term)))
+ftab = flextable(tab)%>%
+  autofit() %>%
+  theme_box() %>%
+  colformat_double(digits=2)
+ftab
+```
+
+The table shows the rate ratios and confidence intervals from a Poisson regression model. 
+The reference category for the recommendation is Approve. 

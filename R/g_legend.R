@@ -1,0 +1,8 @@
+## make separate legend for plotting
+# from https://stackoverflow.com/questions/12539348/ggplot-separate-legend-and-plot
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  legend
+}

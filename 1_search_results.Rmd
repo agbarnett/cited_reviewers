@@ -1,0 +1,48 @@
+---
+title: "Results of the PubMed search"
+author: "Adrian Barnett"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, error=FALSE, comment='', dpi=400)
+library(dplyr)
+library(janitor)
+library(flextable)
+
+## get the data from 0_find_papers_and_get_dois.R
+load('data/0_api_search.RData')
+
+start_date = min(study_journals$start_date)
+end_date = search_date
+```
+
+The search was made in the `r nrow(study_journals)` journals of: `r paste(study_journals$journal, sep=', ')`. The dates were restricted to `r format(start_date, '%d-%m-%Y')` to `r format(end_date, '%d-%m-%Y')`.
+
+The number of articles returned was `r nrow(all_dois)`. 
+
+The searches were conducted using the journals' APIs.
+
+### Counts of articles per journal
+
+```{r}
+stats = tabyl(all_dois, journal) %>%
+  mutate(percent = round(percent*100)) %>%
+  arrange(desc(n))
+ftab = flextable(stats) %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
+
+### Random selection of 10 articles
+
+```{r}
+TeachingDemos::char2seed('betis')
+selected = sample_n(all_dois, 10)
+ftab = flextable(selected) %>%
+  theme_box() %>%
+  autofit()
+ftab
+```
