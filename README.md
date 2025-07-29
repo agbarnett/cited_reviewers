@@ -30,22 +30,7 @@ The subfolders are:
 
 The data does not include the review text as this made the file too large for _GitHub_.
 
-<details>
-
-<summary>Tips for collapsed sections</summary>
-
-### You can add a header
-
-You can add text within a collapsed section.
-
-You can add an image or a code block, too.
-
-```ruby
-   puts "Hello World"
-```
-
-
-<details><summary>#### R version and packages</summary>
+<details><summary>R version and packages</summary>
 <p>
 
 ```
