@@ -51,3 +51,8 @@ excluded = exclusions$excluded
 excluded = mutate(excluded, 
                   doi = paste(str_sub(doi, 1, 8), '/', str_sub(doi, 10, nchar(doi)), sep=''))
 save(excluded, reviewers_papers, file = 'data/4_reviewers_papers.RData')
+
+# smaller version for github
+reviewers_papers = select(reviewers_papers, -rtext)
+save(excluded, reviewers_papers, file = 'data/4_reviewers_papers_github.RData')
+

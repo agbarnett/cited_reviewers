@@ -3,8 +3,8 @@
 # June 2025
 library(gridExtra)
 
-l1 = 'Approve vs\nReservations/Reject' # short labels
-l2 = 'Approve/Reservations\nvs Reject'
+l1 = 'Approved vs\nReservations/Not approved' # short labels
+l2 = 'Approved/Reservations\nvs Not approved'
 
 # get the right data
 for_plot1 = filter(results1_only_referees$results, clabel == 'log')
@@ -30,7 +30,7 @@ vcolours = c('darkseagreen3','dodgerblue')
 text1 = data.frame(model = 1.5, y = 1, lower = NA, upper = NA, version=1, outcome=1, rq = 1, label = 'More favourable\nrecommendation') 
 text2 = data.frame(model = 1.5, y = 1, lower = NA, upper = NA, version=1, outcome=1, rq = 1, label = 'Less favourable\nrecommendation') 
 # odds ratio label with arrows
-ylab = "Odds ratio\n(Approve \u2192 Reservations \u2192 Reject)" # using symbol for the right arrow
+ylab = "Odds ratio\n(Approved \u2192 Reservations \u2192 Not approved)" # using symbol for the right arrow
 
 # break into two plots
 
@@ -48,8 +48,8 @@ plotl1 = ggplot(data = filter(to_plot, rq == 1), aes(x = citations, y = or, col 
   theme(axis.ticks.y = element_blank(),
         panel.grid.minor = element_blank(),
         legend.position = 'none', # show legend in next plot
-        legend.key.width = unit(36, 'pt'), # make key wider to show CIs
-        legend.key.spacing.y = unit(8, "pt"))+ # increase space in legend because of long text
+        legend.key.width = unit(22, 'pt'), # make key wider to show CIs
+        legend.key.spacing.y = unit(6, "pt"))+ # increase space in legend because of long text
   facet_wrap(~facet)
 
 #
@@ -66,13 +66,13 @@ plotl2 = ggplot(data = filter(to_plot, rq == 2), aes(x = citations, y = or, col 
   theme(axis.ticks.y = element_blank(),
         panel.grid.minor = element_blank(),
         legend.position = 'bottom',
-        legend.key.width = unit(36, 'pt'), # make key wider to show CIs
-        legend.key.spacing.y = unit(8, "pt"))+ # increase space in legend because of long text
+        legend.key.width = unit(22, 'pt'), # make key wider to show CIs
+        legend.key.spacing.y = unit(6, "pt"))+ # increase space in legend because of long text
   facet_wrap(~facet)
 
 # export figures
 jpeg(filename = 'figures/6_linear_predictor.jpg',  
-     width = 5.5, height = 5.5, units = 'in', res = 500)
+     width = 5.6, height = 5.5, units = 'in', res = 500)
 grid.arrange(plotl1, plotl2, ncol = 1, heights = c(1,1.3)) # heights by trial and error
 dev.off()
 

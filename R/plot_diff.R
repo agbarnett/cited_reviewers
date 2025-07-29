@@ -9,7 +9,7 @@ plot_diff = function(co_reviewers, referees_only){
   to_plot = bind_rows(co_reviewers, referees_only, .id = 'id') %>%
     filter(confounder == '') %>% # for main results
     mutate(Version = ifelse(version==1, "Version 1", 'Version 2+'), # make nicer facet labels
-           Outcome = ifelse(outcome==1, 'Approve vs\nReservations/Reject', 'Approve/Reservations vs\nReject')) 
+           Outcome = ifelse(outcome==1, 'Approved vs\nReservations/Not approved', 'Approved/Reservations vs\nNot approved')) 
   
   #
   colours = c('darkred','darkseagreen')

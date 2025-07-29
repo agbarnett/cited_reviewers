@@ -3,8 +3,8 @@
 # re-arranged to group together results by the outcome categories
 # June 2025
 
-l1 = 'Approve vs\nReservations/Reject' # short labels
-l2 = 'Approve/Reservations\nvs Reject'
+l1 = 'Approved vs\nReservations/Not approved' # short labels
+l2 = 'Approved/Reservations\nvs Not approved'
 
 ## get the right data
 # estimates
@@ -23,14 +23,14 @@ vlabels = c('1','2+')
 text1 = data.frame(model = 1.5, y = 1.05, lower = NA, upper = NA, version=1, outcome=1, label = 'Reviewer\nmore\nfavourable') 
 text2 = data.frame(model = 1.5, y = 0.95, lower = NA, upper = NA, version=1, outcome=1, label = 'Reviewer\nless\nfavourable') 
 # titles to split later plots
-dtitle1 = data.frame(x=0, y=0, text = "Approve versus Reservations or Reject")
+dtitle1 = data.frame(x=0, y=0, text = "Approved versus Reservations or Not approved")
 title1 = ggplot(data = dtitle1, aes(x=x, y=y, label=text))+
   geom_text(fontface = "bold")+
   xlab(NULL)+
   ylab(NULL)+
   theme_void()+
   theme(plot.margin = margin(0, 0, 0, 0, "mm"))
-dtitle2 = data.frame(x=0, y=0, text = "Approve or Reservations versus Reject")
+dtitle2 = data.frame(x=0, y=0, text = "Approved or Reservations versus Not approved")
 title2 = ggplot(data = dtitle2, aes(x=x, y=y, label=text))+
   geom_text(fontface = "bold")+
   xlab(NULL)+
@@ -47,12 +47,13 @@ plot_top_left = ggplot(data = filter(for_plot, outcome == 1),
   geom_label(data = text1, aes(x=model, y=y, label=label), size=3, adj=0, col='grey66')+
   geom_label(data = text2, aes(x=model, y=y, label=label), size=3, adj=1, col='grey66')+
   xlab('Article version')+
-  ylab('Odds ratio, Approve vs Reservations/Reject')+
+  ylab('Odds ratio, Approved vs Reservations/Not approved')+
   scale_color_manual('Article version', values = vcolours, labels=c('1','2+'))+
   scale_x_reverse(breaks=1:2, labels=vlabels, expand=c(0.05,0.05))+ # 
   scale_y_log10(breaks=c(0.7,1,1.5,2), labels=c('0.7','1','1.5','2.0'))+
   theme_bw()+
   theme(axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=9),
         panel.grid.minor = element_blank(),
         legend.position = 'none',
         legend.key.width = unit(36, 'pt'), # make key wider to show CIs
@@ -69,12 +70,13 @@ plot_bottom_left = ggplot(data = filter(for_plot, outcome == 2),
   geom_label(data = text1, aes(x=model, y=y, label=label), size=3, adj=0, col='grey66')+
   geom_label(data = text2, aes(x=model, y=y, label=label), size=3, adj=1, col='grey66')+
   xlab('Article version')+
-  ylab('Odds ratio, Approve/Reservations vs Reject')+
+  ylab('Odds ratio, Approved/Reservations vs Not approved')+
   scale_color_manual('Article version', values = vcolours, labels=c('1','2+'))+
   scale_x_reverse(breaks=1:2, labels=vlabels, expand=c(0.05,0.05))+ # 
   scale_y_log10(breaks=c(0.7,1,1.5,2), labels=c('0.7','1','1.5','2.0'))+
   theme_bw()+
   theme(axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=9),
         panel.grid.minor = element_blank(),
         legend.position = 'none',
         legend.key.width = unit(36, 'pt'), # make key wider to show CIs
@@ -90,7 +92,7 @@ plot_top_right = ggplot(data = filter(for_plot_pred, outcome==1),
   geom_point(size=5)+
   geom_errorbar(width=0, linewidth=1.1)+
   xlab('')+
-  ylab('Probability of Approve')+
+  ylab('Probability of Approved')+
   scale_color_manual('Article version:', values = vcolours, labels=c('1','2+'))+
   scale_x_reverse(breaks=seq(1,2.5,0.5), labels=labels)+ # reverse version 1 at top
   theme_bw()+
@@ -112,7 +114,7 @@ plot_bottom_right = ggplot(data = filter(for_plot_pred, outcome==2),
   geom_point(size=5)+
   geom_errorbar(width=0, linewidth=1.1)+
   xlab('')+
-  ylab('Probability of Approve/Reservations')+
+  ylab('Probability of Approved/Reservations')+
   scale_color_manual('Article version', values = vcolours, labels=c('1','2+'))+
   scale_x_reverse(breaks=seq(1,2.5,0.5), labels=labels)+ # reverse version 1 at top
   theme_bw()+
@@ -130,7 +132,7 @@ lmatrix = matrix(c(NA,1,1,NA,
                    5,5,5,5,
                    6,6,7,7), ncol=4, byrow=TRUE)
 #
-jpeg('figures/6_reviewer_cited_withp.jpg', width = 6.7, height = 6.5, units = 'in', res = 500)
+jpeg('figures/6_reviewer_cited_withp.jpg', width = 6.8, height = 6.5, units = 'in', res = 500)
 grid.arrange(glegend, # odd order, but done to avoid overlap
              title1,
              plot_top_left, plot_top_right, 

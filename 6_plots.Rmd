@@ -22,8 +22,8 @@ matched = mutate(matched,
                    recommendation == 'reject' ~ 3,
                  ),
                  version3 = ifelse(version>=3, 3, version)) %>% # capped version
-  filter(!is.na(matches)) # can't use if assessment of matching could not be made ===  DO WE NEED THIS FOR SUMMARIES?
-rlabels = c('Approve','Approve with\nreservations','Reject')
+  filter(!is.na(matches)) # can't use if assessment of matching could not be made 
+rlabels = c('Approve','Approve with\nreservations','Not approved')
 colours = c("darkseagreen3", "darkorange", "brown2")
 ```
 

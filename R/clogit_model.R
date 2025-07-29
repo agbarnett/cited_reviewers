@@ -89,8 +89,8 @@ run_one = function(formula, indata, this_v, this_co, this_o, this_c = '', this_t
 
 ## main function
 run_clogit = function(indata, 
-                      l1 = 'Approve vs\nReservations/Reject', # short labels
-                      l2 = 'Approve/Reservations\nvs Reject',
+                      l1 = 'Approve vs\nReservations/Not approved', # short labels
+                      l2 = 'Approve/Reservations\nvs Not approved',
                       co_reviews = TRUE, # include co-reviewers or not
                       countries, # for leave one country out analysis
                       predictor){
@@ -245,7 +245,7 @@ run_clogit = function(indata,
   for_plot = filter(results, !confounder %in% countries) # remove country results
   for_plot = filter(for_plot, str_detect(confounder, pattern = '0$')) # plot results for log-transformed works count as that was generally the best fit, see AIC below; although does not really matter, see eplot
   # odds ratio label
-  ylab = "Odds ratio (Approve \u2192 Reservations \u2192 Reject)" # using symbol for the right arrow
+  ylab = "Odds ratio (Approve \u2192 Reservations \u2192 Not approved)" # using symbol for the right arrow
   #
   plot = ggplot(data = for_plot, aes(x = model, y = coef, ymin=lower, ymax = upper, 
                                      col=factor(outcome)))+

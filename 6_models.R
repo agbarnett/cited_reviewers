@@ -18,7 +18,7 @@ source('R/plot_diff.R') # plots estimates
 source('R/g_legend.R') # for separate legend in grid.arrange plots
 
 # odds ratio label used in plots
-ylab = "Odds ratio (Approve \u2192 Reservations \u2192 Reject)" # using symbol for the right arrow
+ylab = "Odds ratio (Approved \u2192 Reservations \u2192 Not approved)" # using symbol for the right arrow
 
 # data from 5_match_papers_reviewers.R
 load('data/5_analysis_data.RData')
@@ -127,7 +127,8 @@ eplot = ggplot(data = for_plot, aes(x = clabel, y = coef, ymin = lower, ymax = u
   scale_y_log10()+
   scale_x_discrete(labels = rev(c('None','-2','-1','log','1','2','3')))+ # present transforms in order
   theme_bw() +
-  theme(strip.text = element_text(margin = margin(t = 0.2, r = 0, b = 0, l = 0, unit = "lines")), # reduce spacing in facet labels
+  theme(strip.text = element_text(size = 8, 
+                                  margin = margin(t = 0.2, r = 0, b = 0, l = 0, unit = "lines")), # reduce spacing in facet labels
         panel.spacing = unit(0.5, "lines"))+ # reduce size of spacing between facets
   xlab('Fractional polynomial transformation')+
   ylab(ylab)+
@@ -148,7 +149,8 @@ eplot = ggplot(data = for_plot, aes(x = clabel, y = coef, ymin = lower, ymax = u
   scale_y_log10()+
   scale_x_discrete(labels = rev(c('None','-2','-1','log','1','2','3')))+ # present transforms in order
   theme_bw() +
-  theme(strip.text = element_text(margin = margin(t = 0.2, r = 0, b = 0, l = 0, unit = "lines")), # reduce spacing in facet labels
+  theme(strip.text = element_text(size = 8, 
+                                  margin = margin(t = 0.2, r = 0, b = 0, l = 0, unit = "lines")), # reduce spacing in facet labels
         panel.spacing = unit(0.5, "lines"))+ # reduce size of spacing between facets
   xlab('Fractional polynomial transformation')+
   ylab(ylab)+
@@ -172,7 +174,8 @@ cplot = ggplot(data = countries_to_plot, aes(x = confounder, y = coef, ymin = lo
   geom_errorbar(width = 0, col = colour)+
   scale_y_log10()+
   theme_bw() +
-  theme(strip.text = element_text(margin = margin(t = 0.2, r = 0, b = 0, l = 0, unit = "lines")), # reduce spacing in facet labels
+  theme(strip.text = element_text(size = 8, 
+                                  margin = margin(t = 0.2, r = 0, b = 0, l = 0, unit = "lines")), # reduce spacing in facet labels
         panel.spacing = unit(0.5, "lines"))+ # reduce size of spacing between facets
   xlab(NULL)+
   ylab(ylab)+
@@ -193,7 +196,8 @@ cplot = ggplot(data = countries_to_plot, aes(x = confounder, y = coef, ymin = lo
   geom_errorbar(width = 0, col = colour)+
   scale_y_log10()+
   theme_bw() +
-  theme(strip.text = element_text(margin = margin(t = 0.2, r = 0, b = 0, l = 0, unit = "lines")), # reduce spacing in facet labels
+  theme(strip.text = element_text(size = 8, 
+                                  margin = margin(t = 0.2, r = 0, b = 0, l = 0, unit = "lines")), # reduce spacing in facet labels
         panel.spacing = unit(0.5, "lines"))+ # reduce size of spacing between facets
   xlab(NULL)+
   ylab(ylab)+
