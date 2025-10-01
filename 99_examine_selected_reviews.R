@@ -52,4 +52,4 @@ diff <-
            list(matches = 0)
   )
 print(diff, X = TRUE) # log odds
-exp(c(1.061375, 0.4888874, 1.633862)) # odds ratio
+exp(c(1.262051, 0.7054171, 1.818685)) # odds ratio

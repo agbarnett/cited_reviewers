@@ -76,7 +76,7 @@ plotl2 = ggplot(data = filter(to_plot, rq == 2), aes(x = citations, y = or, col 
 ## export figure
 # add common y-axis label
 y.grob <- textGrob(ylab, 
-                   gp = gpar(fontsize=13), rot=90)
+                   gp = gpar(fontsize=11), rot=90)
 jpeg(filename = 'figures/6_linear_predictor.jpg',  
      width = 5.8, height = 5.5, units = 'in', res = 500)
 grid.arrange(plotl1, plotl2, ncol = 1, heights = c(1,1.3), left=y.grob) # heights by trial and error

@@ -184,7 +184,7 @@ cplot = ggplot(data = countries_to_plot, aes(x = confounder, y = coef, ymin = lo
 cplot
 # export
 ggsave(filename = 'figures/6_leave_out_country_cited.jpg', cplot,
-       width = 7.4, height = 7.2, units = 'in', dpi = 500)
+       width = 7.4, height = 7.2, units = 'in', dpi = 500) # had to make bigger than other plots to fit in labels
 # self-cited
 countries_to_plot = filter(results2_only_referees$results, confounder %in% c('', top_ten_countries)) %>%
   mutate(confounder = ifelse(confounder=='', 'All countries', confounder),

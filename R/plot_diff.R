@@ -20,7 +20,7 @@ plot_diff = function(co_reviewers, referees_only){
     xlab('')+
     ylab('Odds ratio')+
     scale_color_manual('Co-reviewers', values = colours, labels=c('Yes','No'))+
-    scale_x_discrete(breaks=NULL) + # blank axis
+    scale_x_discrete(breaks=NULL, limits=rev) + # blank axis; reverse limits to match legend
     scale_y_log10()+
     theme_bw()+
     theme(axis.ticks.y = element_blank(),
