@@ -1,7 +1,9 @@
 # 6_linear_plot.R
 # make figures for linear associations
+# called by 6_models.R
 # June 2025
 library(gridExtra)
+library(grid) # for textGrob
 
 l1 = 'Approved vs\nReservations/Not approved' # short labels
 l2 = 'Approved/Reservations\nvs Not approved'
@@ -36,12 +38,12 @@ ylab = "Odds ratio\n(Approved \u2192 Reservations \u2192 Not approved)" # using 
 
 #
 plotl1 = ggplot(data = filter(to_plot, rq == 1), aes(x = citations, y = or, col = factor(outcome)))+
-  ggtitle('Question 1: reviewer cited')+
+  ggtitle('Question 1: reviewer is cited in article')+
   geom_hline(yintercept=1, lty=2, col='grey33')+
   geom_line()+
   geom_point(size=3)+
   xlab(NULL) + # done in plot below
-  ylab(' \n ') + # done in plot below
+  ylab(NULL) + # done in plot below
   scale_color_manual('Recommendation', values = vcolours, labels=c(l1, l2))+
   scale_y_log10(breaks = c(0.7,1,1.5)) + #breaks = breaks_fun)+ # see above
   theme_bw()+
@@ -54,12 +56,12 @@ plotl1 = ggplot(data = filter(to_plot, rq == 1), aes(x = citations, y = or, col 
 
 #
 plotl2 = ggplot(data = filter(to_plot, rq == 2), aes(x = citations, y = or, col = factor(outcome)))+
-  ggtitle('Question 2: reviewer asks for self-citation')+
+  ggtitle('Question 2: reviewer includes a citation to their own articles')+
   geom_hline(yintercept=1, lty=2, col='grey33')+
   geom_line()+
   geom_point(size=3)+
   xlab('Number of citations')+
-  ylab(ylab)+
+  ylab(NULL)+
   scale_color_manual('Recommendation', values = vcolours, labels=c(l1, l2))+
   scale_y_log10() + #breaks = breaks_fun)+ # see above
   theme_bw()+
@@ -70,9 +72,13 @@ plotl2 = ggplot(data = filter(to_plot, rq == 2), aes(x = citations, y = or, col 
         legend.key.spacing.y = unit(6, "pt"))+ # increase space in legend because of long text
   facet_wrap(~facet)
 
-# export figures
+
+## export figure
+# add common y-axis label
+y.grob <- textGrob(ylab, 
+                   gp = gpar(fontsize=13), rot=90)
 jpeg(filename = 'figures/6_linear_predictor.jpg',  
-     width = 5.6, height = 5.5, units = 'in', res = 500)
-grid.arrange(plotl1, plotl2, ncol = 1, heights = c(1,1.3)) # heights by trial and error
+     width = 5.8, height = 5.5, units = 'in', res = 500)
+grid.arrange(plotl1, plotl2, ncol = 1, heights = c(1,1.3), left=y.grob) # heights by trial and error
 dev.off()
 

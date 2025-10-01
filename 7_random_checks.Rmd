@@ -130,7 +130,7 @@ colours = c('darkseagreen3', "khaki3", "mediumorchid3", "darkorange3")
 labels = c('Prior for error rates',
            'Posterior for not cited error',
            'Posterior for cited error',
-           'Posterior for self-cited error')
+           'Posterior for cited own articles error')
 
 ## dotted lines for 90%
 # 
@@ -168,7 +168,7 @@ bplot = ggplot(data=to_plot, aes(x=x, y=d, col=factor(group)))+
   scale_x_continuous(expand=c(0.005,0.005))+ # reduce gap to y-axis
   theme_bw()+
   theme(legend.position = "inside", 
-        legend.position.inside =  c(0.75, 0.75),
+        legend.position.inside =  c(0.7, 0.75),
         panel.grid.minor = element_blank())
 bplot
 

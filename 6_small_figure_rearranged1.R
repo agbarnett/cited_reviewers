@@ -1,7 +1,11 @@
 # 6_small_figure_rearranged1.R
 # remake small version of the figure outside of function
 # re-arranged to group together results by the outcome categories
-# June 2025
+# September 2025
+
+# use same scales in upper and lower panels
+limits_odds = c(0.5, 2.2)
+limits_probability = c(0.3, 0.64)
 
 l1 = 'Approved vs\nReservations/Not approved' # short labels
 l2 = 'Approved/Reservations\nvs Not approved'
@@ -40,7 +44,8 @@ title2 = ggplot(data = dtitle2, aes(x=x, y=y, label=text))+
 
 #
 plot_top_left = ggplot(data = filter(for_plot, outcome == 1), 
-               aes(x = version, y = coef, ymin=lower, ymax = upper, col=factor(version)))+
+               aes(x = version, y = coef, ymin=lower, ymax = upper, 
+                   pch=factor(version), col=factor(version)))+
   geom_hline(yintercept=1, lty=2, col='grey33')+
   geom_point(size=5)+
   geom_errorbar(width=0, linewidth=1.1)+
@@ -49,6 +54,7 @@ plot_top_left = ggplot(data = filter(for_plot, outcome == 1),
   xlab('Article version')+
   ylab('Odds ratio, Approved vs Reservations/Not approved')+
   scale_color_manual('Article version', values = vcolours, labels=c('1','2+'))+
+  scale_shape_manual('Article version', values = c(15,16), labels=c('1','2+'))+
   scale_x_reverse(breaks=1:2, labels=vlabels, expand=c(0.05,0.05))+ # 
   scale_y_log10(breaks=c(0.7,1,1.5,2), labels=c('0.7','1','1.5','2.0'))+
   theme_bw()+
@@ -58,12 +64,13 @@ plot_top_left = ggplot(data = filter(for_plot, outcome == 1),
         legend.position = 'none',
         legend.key.width = unit(36, 'pt'), # make key wider to show CIs
         legend.key.spacing.y = unit(8, "pt"))+ # increase space in legend because of long text
-  coord_flip() 
+  coord_flip(ylim = limits_odds) 
 plot_top_left
 
 #
 plot_bottom_left = ggplot(data = filter(for_plot, outcome == 2), 
-                       aes(x = version, y = coef, ymin=lower, ymax = upper, col=factor(version)))+
+                       aes(x = version, y = coef, ymin=lower, ymax = upper, 
+                           pch=factor(version), col=factor(version)))+
   geom_hline(yintercept=1, lty=2, col='grey33')+
   geom_point(size=5)+
   geom_errorbar(width=0, linewidth=1.1)+
@@ -72,6 +79,7 @@ plot_bottom_left = ggplot(data = filter(for_plot, outcome == 2),
   xlab('Article version')+
   ylab('Odds ratio, Approved/Reservations vs Not approved')+
   scale_color_manual('Article version', values = vcolours, labels=c('1','2+'))+
+  scale_shape_manual('Article version', values = c(15,16), labels=c('1','2+'))+
   scale_x_reverse(breaks=1:2, labels=vlabels, expand=c(0.05,0.05))+ # 
   scale_y_log10(breaks=c(0.7,1,1.5,2), labels=c('0.7','1','1.5','2.0'))+
   theme_bw()+
@@ -81,19 +89,21 @@ plot_bottom_left = ggplot(data = filter(for_plot, outcome == 2),
         legend.position = 'none',
         legend.key.width = unit(36, 'pt'), # make key wider to show CIs
         legend.key.spacing.y = unit(8, "pt"))+ # increase space in legend because of long text
-  coord_flip() 
+  coord_flip(ylim = limits_odds) 
 plot_bottom_left
 
 
 ## probability plots
-labels = c('Not\ncited\n(version 1)','Cited\n(version 1)','Not\ncited\n(version 2+)','Cited\n(version 2+)')
+labels = c('Not cited\n(version 1)','Cited\n(version 1)','Not cited\n(version 2+)','Cited\n(version 2+)')
 plot_top_right = ggplot(data = filter(for_plot_pred, outcome==1), 
-               aes(x = version + (pred/2), y = prob, ymin=lower, ymax = upper, col=factor(version)))+
+               aes(x = version + (pred/2), y = prob, ymin=lower, ymax = upper, 
+                   pch=factor(version), col=factor(version)))+
   geom_point(size=5)+
   geom_errorbar(width=0, linewidth=1.1)+
   xlab('')+
   ylab('Probability of Approved')+
   scale_color_manual('Article version:', values = vcolours, labels=c('1','2+'))+
+  scale_shape_manual('Article version:', values = c(15,16), labels=c('1','2+'))+
   scale_x_reverse(breaks=seq(1,2.5,0.5), labels=labels)+ # reverse version 1 at top
   theme_bw()+
   theme(axis.ticks.y = element_blank(),
@@ -103,25 +113,27 @@ plot_top_right = ggplot(data = filter(for_plot_pred, outcome==1),
         legend.box.margin = margin(0, 0, 0, 0, "cm"), 
         legend.title = element_text(hjust = 0.9), # move to right
         legend.position = 'top')+
-  coord_flip() # 
+  coord_flip(ylim = limits_probability) # 
 plot_top_right
 # get legend
 glegend = g_legend(plot_top_right) # get legend ... 
 plot_top_right = plot_top_right + theme(legend.position = 'none')  # ... now turn off legend
 #
 plot_bottom_right = ggplot(data = filter(for_plot_pred, outcome==2), 
-                        aes(x = version + (pred/2), y = prob, ymin=lower, ymax = upper, col=factor(version)))+
+                        aes(x = version + (pred/2), y = prob, ymin=lower, ymax = upper, 
+                            pch=factor(version), col=factor(version)))+
   geom_point(size=5)+
   geom_errorbar(width=0, linewidth=1.1)+
   xlab('')+
   ylab('Probability of Approved/Reservations')+
   scale_color_manual('Article version', values = vcolours, labels=c('1','2+'))+
+  scale_shape_manual('Article version', values = c(15,16), labels=c('1','2+'))+
   scale_x_reverse(breaks=seq(1,2.5,0.5), labels=labels)+ # reverse version 1 at top
   theme_bw()+
   theme(axis.ticks.y = element_blank(),
         panel.grid.minor = element_blank(),
         legend.position = 'none')+
-  coord_flip() # 
+  coord_flip(ylim = limits_probability) # 
 plot_bottom_right
 
 

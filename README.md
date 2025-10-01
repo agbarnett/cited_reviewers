@@ -28,7 +28,7 @@ The subfolders are:
 * `as_predicted` PDF submitted to the [As Predicted](https://aspredicted.org/rn8vg.pdf) site in May 2024.
 * `data` data in _R_ format.
 
-The data does not include the review text as this made the file too large for _GitHub_.
+The shared data does not include the review text as this made the file too large for _GitHub_.
 
 <details><summary>R version and packages</summary>
 <p>

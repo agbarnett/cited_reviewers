@@ -232,3 +232,4 @@ to_table = bind_rows(fit_compare1, fit_compare1a, fit_compare2, fit_compare2a) %
          'Co-reviewers included' = 'co_reviews')
 # export to latex
 print(xtable(to_table, digits=1), include.rownames=FALSE, hline.after=FALSE, file = "results/6_aic_models.tex")
+

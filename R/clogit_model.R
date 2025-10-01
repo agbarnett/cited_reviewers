@@ -31,12 +31,14 @@ run_one = function(formula, indata, this_v, this_co, this_o, this_c = '', this_t
     s = summary(model)
     s = data.frame(s$coefficients) %>% 
       tibble::rownames_to_column() %>%
-      filter(rowname == 'pred') %>% # remove confounder
+      filter(rowname == 'pred') %>% # remove estimated for confounder
       mutate(co_reviews = this_co,
              version = this_v,
              outcome = this_o,
              confounder = this_c,
              type = this_type,
+             n_articles = length(unique(indata$doi)), # number of articles
+             n_reviews = nrow(indata), # number of reviews
              iter = model$iter, # store iterations to check on model fit
              aic = AIC(model), 
              warning = FALSE) %>% # add model fit
@@ -79,10 +81,11 @@ run_one = function(formula, indata, this_v, this_co, this_o, this_c = '', this_t
   
   }
   
-  #
+  # export
   to_return = list()
   to_return$estimates = s
   to_return$predictions = predictions
+  to_return$model = model # for influential checks
   return(to_return)
 }
 
