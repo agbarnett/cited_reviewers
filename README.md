@@ -1,5 +1,7 @@
 # Cited reviewers study
 
+The study results are available in eLife DOI:[10.7554/eLife.108748.4](https://doi.org/10.7554/eLife.108748.4).
+
 Research Questions: 
 
 1. Do peer reviewers give a more or less favourable recommendation when they are cited in the article? PICO: Peer reviewers (Population), Cited (Intervention), Not Cited (Control), Favourable recommendation (Outcome).
